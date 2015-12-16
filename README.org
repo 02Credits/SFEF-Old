@@ -1,0 +1,99 @@
+* Space Fantasy Eve Fortress
+This is the beginnings of an asynchronous multiplayer strategy game. This is only the beginnings of the development.
+** Design
+A Trello board with what we need next can be found [[https://trello.com/b/DPpbq7UJ/sfef][here]].
+The google doc can be found [[https://docs.google.com/document/d/1uiGhHFueh3gO09-YCNDvkdNEdFpCG5dbwFpc_HdpAD0/edit][here]].
+** Project Structure
+*** SFEF
+Most of the UI work is done in the main SFEF project. The interface is developed using [[https://msdn.microsoft.com/en-us/library/ms754130(v=vs.110).aspx][WPF]] user interface toolkit,
+[[http://caliburnmicro.com/][Caliburn Micro]] for the UI framework, and [[http://www.ninject.org/][Ninject]] for dependency injection.
+*** MonogameWPFInterop
+The interop project contains a wrapper for the Monogame framework which allows us to integrate a game window inside
+of a WPF control. This was mostly taken from [[https://github.com/thiagoromam/GameDevelopment/tree/master/MonogameWpf2][MonogameWpf2]].
+*** MapRenderer
+This is a mostly empty game project that will be used to render the main map. This is where the world will be rendered
+including isometric tiles and character sprites. I also plan for a simple radial menu to be designed which will be
+used to interact with the various objects in the world.
+*** CharacterRenderer
+Also mostly empty at this point, but will contain another Monogame project which will be used to render a picture
+of the character in the inventory screen.
+** Concepts
+*** Views - View Models
+Views and View Models are the terms used to represent the user interface in many applications. A view is code
+usually written in a domain specific language such as html or xaml which describes the structure of the user
+interface. A view model is the code which specifies where the view gets its content. It is usually just a class
+with members on it that correspond to various parts of the view. When the view model changes, a corresponding
+change should be reflected in the view and therefor the ui.
+
+We are using Caliburn Micro, which is a ui library that "simplifies" the maintenance of user interface code. In
+practice this just means that instead of having tightly coupled view and view models like is characteristic of
+classic WPF applications, we have somewhat separated files in the [[https://github.com/02Credits/SFEF/tree/master/SFEF/Views][views]] and [[https://github.com/02Credits/SFEF/tree/master/SFEF/ViewModels][view models]] directories.
+*** Dependency Injection
+Dependency Injection is a way of architecting an app so that the individual pieces can be tested individually.
+The basic idea is that every class should have a corresponding interface which mirrors the main class for every
+public member or method. Then when a class needs to take arguments to its constructor it uses the interfaces
+instead of the main class. This is useful for a number of reasons, but the most important is when writing unit
+tests. Since every class only has interface versions of the arguments to its constructor, we can provide fake
+versions instead of the real thing when writing unit tests. I haven't decided which to use yet, but there are
+libraries which make this process brain dead easy and can make writing unit tests for relatively entangled code
+a breeze.
+** Libraries
+*** [[https://msdn.microsoft.com/en-us/library/ms754130(v=vs.110).aspx][WPF]]
+WPF is the user interface library we will be using for the project. It is functionally similar to html. The main
+trick to realize with it is that every tag in the xaml (xml++) gets converted into an actual c# class. In our case
+you will rarely actually interact with the views directly because Caliburn Micro does so much of the interaction
+for us. In classical WPF apps though, xaml files are closely tied with c# files with the same name. The c# file
+will simply have a class in it that is marked partial, which is C#'s way of saying that the declaration for the
+class exists in more than one place. Xaml tags often have a " x:Name="" " attribute in them. This determines what
+the field in the underlying class will be called. Because we are using Caliburn Micro, we will pretty much always
+have a matching Class Member in the view model side.
+*** [[http://caliburnmicro.com/][Caliburn Micro]]
+Caliburn Micro is the VVM library we will be using. Its a rather big library which holds a couple main purposes:
+
+1. It automatically locates and hooks up view models for each of the views in the user interface. It does this by
+replacing every instance of the word viewmodel with view and the .cs file extension for .xaml.
+2. It automatically pastes in the correct xaml wherever there is a <ContentControl> tag. It does this by looking
+in the view model for the associated variable with the same name as x:Name. It then uses the above strategy to
+find the correct view to copy in.
+3. It provides various utility classes such as the EventAggregator which we might use in the future.
+
+Caliburn Micro tends to subscribe to the convention over configuration model of software development. This just
+means that it uses Magic to do what you mean without a lot of ceremony. You do have to know the correct spells
+for it to work though. Id recommend reading through their website documentation http://caliburnmicro.com/documentation/
+and or the source code itself if you get lost. You can also just ask me and we can work through it together.
+*** [[http://www.ninject.org/][Ninject]]
+Ninject is the dependency injection library we will be using. The only real gotchya for it is that it does do some
+magic when constructing arguments to constructors. The kernel is initialized in the caliburn micro [[https://github.com/02Credits/SFEF/blob/master/SFEF/SFEFBootstrapper.cs][bootstrapper]].
+The important bits are here:
+#+begin_src csharp
+kernel = new StandardKernel();
+
+kernel.Bind<IWindowManager>().To<WindowManager>().InSingletonScope();
+kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+
+kernel.Bind(x =>
+{
+    x.FromThisAssembly()
+      .SelectAllClasses()
+      .BindAllInterfaces();
+});
+#+end_src
+The bind calls simply say that there should be a [[https://en.wikipedia.org/wiki/Singleton_pattern][singleton]] binding from the IWindowManager to the Window Manager class.
+This means that whenever the kernel is asked to construct an object which has an IWindowManager as one of it's
+constructor arguments, it should provide it with the singleton instance of the WindowManager. The last bind call
+is a way of setting up a convention which says that for all classes in the current assembly (dll) bind to the
+interface which matches it. So ShellViewModel gets automatically bound to IShellViewModel.
+
+The kernel has a method called Get on it which when called will look through all of it's bindings, and see if it
+can construct the object by recursively constructing each of the arguments for its constructor.
+
+It is worth noting that the kernel automatically binds itself to the IKernel interface, so any object constructed
+using ninject can get a reference to the kernel by adding an IKernel to its constructor arguments.
+*** [[http://www.monogame.net/][Monogame]]
+Monogame is the library we are using for graphics. It is a port of the XNA library which is an old wrapper over
+DirectX written for C# by Microsoft. MS decided us game devs weren't worthy of their loving care, so we were
+forced to take matters into our own hands. Monogame is a complete port of XNA to SharpDX, OpenGL, and pretty
+much every platform you could think of. XNA not only added bindings to DirectX, but also added a ton of convenience
+functions and tools to make game development less of a pain. These include the Vector classes, and Matrix libraries
+as well as a full featured effects framework. Monogame does that and more by including a content processor and
+nicer wpf bindings which we are taking advantage of. The Monogame folks rock.
