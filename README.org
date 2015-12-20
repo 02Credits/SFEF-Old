@@ -97,3 +97,8 @@ much every platform you could think of. XNA not only added bindings to DirectX, 
 functions and tools to make game development less of a pain. These include the Vector classes, and Matrix libraries
 as well as a full featured effects framework. Monogame does that and more by including a content processor and
 nicer wpf bindings which we are taking advantage of. The Monogame folks rock.
+** Updates
+*** 12/20/2015 CES Library
+I added a component entity system library which we will use as the basis for the server eventually and the
+tile renderer. Component entity system is made up of components, entities which are collections of components,
+and systems which process entities based on the types of the components added.
