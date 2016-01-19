@@ -25,17 +25,11 @@ namespace MapRenderer
             world.InitializeAll(System.Reflection.Assembly.GetExecutingAssembly());
 
             var testEntity = world.CreateEntity();
-            testEntity.AddComponentFromPool<Textured>((textured) =>
+            testEntity.AddComponentFromPool<Textured, Position, Dimensions>((textured, position, dimensions) =>
             {
                 textured.Path = "GrassTile1";
-            });
-            testEntity.AddComponentFromPool<Position>((position) =>
-            {
                 position.X = 0;
                 position.Y = 0;
-            });
-            testEntity.AddComponentFromPool<Dimensions>((dimensions) =>
-            {
                 dimensions.Width = 500;
                 dimensions.Height = 500;
             });
