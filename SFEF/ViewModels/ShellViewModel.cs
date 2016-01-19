@@ -5,32 +5,18 @@ namespace SFEF.ViewModels
 {
     public interface IShellViewModel
     {
-        IMapRendererViewModel MapRendererViewModel { get; }
+        IGameRendererViewModel MapRendererViewModel { get; }
     }
 
     public class ShellViewModel : PropertyChangedBase, IShellViewModel
     {
-        private IKernel kernel;
-        private IMapRendererViewModel mapRendererViewModel;
+        public IGameRendererViewModel MapRendererViewModel { get; set; }
+        public ISideBarViewModel SideBarViewModel { get; set; }
 
-        public IMapRendererViewModel MapRendererViewModel
+        public ShellViewModel(IGameRendererViewModelFactory gameRendererViewModelFactory, ISideBarViewModel sideBarViewModel)
         {
-            get
-            {
-                return mapRendererViewModel;
-            }
-
-            private set
-            {
-                mapRendererViewModel = value;
-            }
-        }
-
-        public ShellViewModel(IKernel kernel, IMapRendererViewModel mapRendererViewModel)
-        {
-            this.kernel = kernel;
-
-            MapRendererViewModel = mapRendererViewModel;
+            MapRendererViewModel = gameRendererViewModelFactory.Create(new MapRenderer.MapRenderer());
+            SideBarViewModel = sideBarViewModel;
         }
     }
 }

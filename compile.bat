@@ -1,0 +1,1 @@
+"c:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" SFEF.sln /t:Rebuild /p:Configuration=Release /p:Platform="any cpu"

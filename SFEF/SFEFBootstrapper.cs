@@ -26,6 +26,14 @@ namespace SFEF
                  .BindAllInterfaces();
             });
 
+            kernel.Bind(x =>
+            {
+                x.FromThisAssembly()
+                 .SelectAllInterfaces()
+                 .EndingWith("Factory")
+                 .BindToFactory();
+            });
+
             Initialize();
         }
 

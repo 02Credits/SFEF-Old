@@ -24,12 +24,12 @@ namespace MonoGame.Interop.Modules
         protected GraphicsDevice GraphicsDevice { get; private set; }
         protected SpriteBatch SpriteBatch { get; private set; }
         protected ContentManager Content { get; private set; }
-        protected double Width
+        public double Width
         {
             get { return drawingSurface.ActualWidth; }
             set { drawingSurface.Width = value; }
         }
-        protected double Height
+        public double Height
         {
             get { return drawingSurface.ActualHeight; }
             set { drawingSurface.Height = value; }
